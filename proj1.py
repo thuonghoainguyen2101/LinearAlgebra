@@ -22,7 +22,6 @@ def read_file(file_name_in):
     for line in fileContent:
         matrix.append(line.split(' '))
 
-    print(matrix)
     for i in range(0, len(matrix)):
         for j in range(0, len(matrix[i])):
             matrix[i][j] = float(matrix[i][j])
@@ -46,6 +45,20 @@ def write_file(file_name_out, determinant, inverse_matrix):
     '''
     
     # YOUR CODE HERE
+    file = open(file_name_out, "w")
+    file.write("Det: " + str(determinant))
+    file.write ("\n\n")
+
+    n = len (inverse_matrix)
+    for i in range(0, n):
+        for j in range(0, n):
+            if inverse_matrix[i][j] >= 0:
+                file.write(' ')
+            inverse_matrix[i][j] = "{:.5f}".format(inverse_matrix[i][j])
+            file.write(str(inverse_matrix[i][j]) + ' ')
+        file.write('\n')
+        
+    file.close()
     
     
 # YOUR OTHER FUNCTIONS
@@ -71,35 +84,51 @@ def append_square_matrix(a, b):
     
     for i in range(0, n):
         res[i] = a[i] + b[i]
-    print(res)
     return res
+
+def swap_rows(row_a, row_b):
+    n = len(row_a)
+    for i in range(0, n):
+        temp = row_a[i]
+        row_a[i] = row_b[i]
+        row_b[i] = temp
 
 def gauss_jordan(matrix):
-    n = len(matrix)
-    for i in range (0, n):
-        print(matrix[i])
+    matrix_row = len(matrix)
+    matrix_col = len(matrix[0])
+
+    for i in range(0, matrix_row):
+    # The main diagonal must not have 0
         if matrix[i][i] == 0:
-            
-            return False #divide by zero -> ERROR!!
-        for j in range(0, n):
-            if i != j:
-                ratio = matrix[j][i] / matrix[i][i]
-                for k in range(0, 2*n):
-                    #print(i, j, k)
-                    matrix[j][k] -= ratio * matrix[i][k]
+            for row in range(i + 1, matrix_row):
+                if matrix[row][i] != 0:
+                    swap_rows(matrix[i], matrix[row])
+                    break
 
-    for i in range(n):
-        divisor = matrix[i][i]
-        for j in range(2*n):
-            matrix[i][j] = matrix[i][j]/divisor
+    # The main diagonal must be 1 & the 2 triangle must be 0
+        # The main diagonal must be 1
+        divide_value = matrix[i][i]
+        for col in range (0, matrix_col):
+            matrix[i][col] = matrix[i][col] / divide_value
 
+        # The 2 triangle must be 0
+        for row in range(0, matrix_row):
+            if row != i:
+                divide_value = matrix[row][i] / matrix[i][i]
+                for col in range(0, matrix_col):
+                    matrix[row][col] = matrix[row][col] - (divide_value) * matrix[i][col]           
+
+    # Split matrix to get te final result
     res = []
-    for i in range(0, n):
-        res.append([])
-        for j in range(n, 2*n):
-            res[i].append(matrix[i][j])
-    print(res)
+    row = []
+    for i in range (0, matrix_row):
+        for j in range (matrix_row, matrix_col):
+            row.append(matrix[i][j])
+        res.append(row.copy())
+        row.clear()
+    
     return res
+        
 
 def calc_determinant_row_operation(matrix):
     '''
@@ -152,23 +181,20 @@ def invert_matrix_row_operation(matrix):
     if det == None or det == 0:
         return None #matrix khong kha nghich
 
-    res = append_square_matrix(matrix, unit_matrix(len(matrix)))
-    if res == None: return None #error
+    append_matrix = append_square_matrix(matrix, unit_matrix(len(matrix)))
+    if append_matrix == None: return None #error
 
-    return gauss_jordan(res)
-    
-    numNodes = len(matrix)
-    # for i in range (0, numNodes):
-        
+    res = gauss_jordan(append_matrix)
+    return res     
 
 
 def main():
     matrix = read_file(file_name_in='input.txt')
-    print("det = " , calc_determinant_row_operation(matrix))
-    #det = calc_determinant_row_opertion(matrix)
-    #inv_mat = invert_matrix_row_operation(matrix)
-    print(invert_matrix_row_operation(matrix))
-    #write_file(file_name_out='MSSV_output.txt', determinant=det, inverse_matrix=inv_mat)
+    
+    det = calc_determinant_row_operation(matrix)
+    inv_mat = invert_matrix_row_operation(matrix)
+    
+    write_file(file_name_out='MSSV_output.txt', determinant=det, inverse_matrix=inv_mat)
 
 if __name__ == "__main__":
     main()
