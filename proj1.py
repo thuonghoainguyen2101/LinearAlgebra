@@ -50,6 +50,10 @@ def write_file(file_name_out, determinant, inverse_matrix):
     
     # YOUR CODE HERE
     file = open(file_name_out, "w")
+    if determinant == None:
+        file.write("Not a Square matrix")
+        return
+    
     file.write("Det: " + "{:.1f}".format(determinant))
     file.write ("\n\n")
 
