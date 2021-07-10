@@ -1,5 +1,3 @@
-from copy import *
-
 def read_file(file_name_in):
     '''
     Read matrix from file
@@ -19,8 +17,14 @@ def read_file(file_name_in):
     file.close()
 
     matrix=[]
+    empty_value = ''
     for line in fileContent:
-        matrix.append(line.split(' '))
+        matrix_row = line.split(' ')
+
+        while ( empty_value in matrix_row ):
+            matrix_row.remove(empty_value)
+
+        matrix.append(matrix_row)        
 
     for i in range(0, len(matrix)):
         for j in range(0, len(matrix[i])):
@@ -46,17 +50,20 @@ def write_file(file_name_out, determinant, inverse_matrix):
     
     # YOUR CODE HERE
     file = open(file_name_out, "w")
-    file.write("Det: " + str(determinant))
+    file.write("Det: " + "{:.1f}".format(determinant))
     file.write ("\n\n")
 
-    n = len (inverse_matrix)
-    for i in range(0, n):
-        for j in range(0, n):
-            if inverse_matrix[i][j] >= 0:
-                file.write(' ')
-            inverse_matrix[i][j] = "{:.5f}".format(inverse_matrix[i][j])
-            file.write(str(inverse_matrix[i][j]) + ' ')
-        file.write('\n')
+    if inverse_matrix == None:
+        file.write ("Can't find inverse matrix")
+    else:
+        n = len (inverse_matrix)
+        for i in range(0, n):
+            for j in range(0, n):
+                if (inverse_matrix[i][j] < 0) == False:
+                    file.write(' ')
+                inverse_matrix[i][j] = "{:.1f}".format(inverse_matrix[i][j])
+                file.write(str(inverse_matrix[i][j]) + ' ')
+            file.write('\n')
         
     file.close()
     
@@ -142,25 +149,48 @@ def calc_determinant_row_operation(matrix):
         determinant : int or float
             The determinant of input matrix
     '''
-    
+
     # YOUR CODE HERE
-    
-    numRow = len(matrix)
-    for row in matrix:
-        if len(row) != numRow:
-            return None #not a square matrix -> det(matrix) = None
 
-    #base case
-    if numRow == 2:
-        return matrix[0][0] * matrix[1][1] - matrix[1][0] * matrix[0][1]
+    n = len(matrix)
+    for i in matrix:
+        if len(i) != n:
+            return None #not a square matrix
 
-    det = 0.0
-    for i in range(0, len(matrix)):
-        #khai trien dinh thuc theo dong thu 0
-        det += (-1)**(1 + i) * matrix[0][i] * calc_determinant_row_operation(sub_matrix(matrix, 0, i))
-    return det
-            
+    #use the copy matrix to caculate so that the oroginal matrix wont be affected
+    matrix_copy = []
+    for i in range (0, n):
+        row_copy = matrix[i].copy()
+        matrix_copy.append(row_copy)
 
+    divide_by_zero = False
+    for i in range(0, n):
+        if matrix_copy[i][i] == 0:
+            divide_by_zero = True
+            for row in range(i + 1, n):
+                if matrix_copy[row][i] != 0:
+                    divide_by_zero = False
+                    swap_rows(matrix_copy[i], matrix_copy[row])
+                    break
+            if divide_by_zero: return 0 
+            # The main diagnoal has a 0 -> There will be a row or a column contains all 0 value -> det = 0
+
+        # The 2 triangle must be 0
+        for row in range(i + 1, n):
+            if row != i:
+                divide_value = matrix_copy[row][i] / matrix_copy[i][i]
+                for col in range(0, n):
+                    matrix_copy[row][col] = matrix_copy[row][col] - (divide_value) * matrix_copy[i][col]
+
+    # determinant = multiple of main diagnoal
+    det = 1
+    for i in range(0, n):
+        det *= matrix_copy[i][i]
+
+    if det >= 0: return det
+    else: return -det
+
+    # Split matrix to get te final result
     
 def invert_matrix_row_operation(matrix):
     '''
@@ -194,7 +224,7 @@ def main():
     det = calc_determinant_row_operation(matrix)
     inv_mat = invert_matrix_row_operation(matrix)
     
-    write_file(file_name_out='MSSV_output.txt', determinant=det, inverse_matrix=inv_mat)
+    write_file(file_name_out='19127287_output.txt', determinant=det, inverse_matrix=inv_mat)
 
 if __name__ == "__main__":
     main()
